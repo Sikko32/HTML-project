@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>학습 청소당번 추첨기</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center p-6">
+  <div class="bg-gray-800 rounded-2xl shadow-lg p-6 w-full max-w-2xl">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h1 class="text-2xl font-bold">학습 청소당번 추첨기</h1>
+        <p class="text-gray-400 text-sm">1번부터 30번 사이에서 <strong>5명</strong>을 무작위로 추첨합니다.</p>
+      </div>
+    </div>
+    <div class="flex gap-3 mb-4">
+      <button id="drawBtn" class="btn btn-primary flex-1">5명 추첨</button>
+      <button id="copyBtn" class="btn btn-info flex-1">결과 복사</button>
+      <button id="resetBtn" class="btn btn-outline-light flex-1">초기화</button>
+    </div>
+    <div id="result" class="flex flex-wrap gap-3 mb-4"></div>
+    <h2 class="text-lg font-semibold mb-2">추첨 기록</h2>
+    <div id="history" class="space-y-2"></div>
+  </div>
+
+  <script>
+    const RESULT = document.getElementById('result');
+    const HISTORY = document.getElementById('history');
+    const POOL_MIN = 1, POOL_MAX = 30, PICK_COUNT = 5;
+    let last = [];
+
+    function shuffle(arr){
+      for(let i = arr.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function draw(){
+      const pool = Array.from({length: POOL_MAX - POOL_MIN + 1}, (_,i) => i + POOL_MIN);
+      shuffle(pool);
+      return pool.slice(0, PICK_COUNT).sort((a,b)=>a-b);
+    }
+
+    function renderResult(nums){
+      RESULT.innerHTML = '';
+      nums.forEach(n => {
+        const el = document.createElement('div');
+        el.className = 'bg-blue-600 rounded-xl w-14 h-14 flex items-center justify-center text-xl font-bold shadow';
+        el.textContent = n;
+        RESULT.appendChild(el);
+      });
+    }
+
+    function addHistory(nums){
+      const el = document.createElement('div');
+      el.className = 'bg-gray-700 rounded-lg p-2 flex justify-between items-center';
+      el.innerHTML = `<div class='flex gap-2'>${nums.map(n=>`<span class='bg-gray-900 px-3 py-1 rounded-full font-semibold'>${n}</span>`).join('')}</div><span class='text-gray-400 text-sm'>${new Date().toLocaleTimeString()}</span>`;
+      HISTORY.prepend(el);
+    }
+
+    document.getElementById('drawBtn').addEventListener('click', () => {
+      last = draw();
+      renderResult(last);
+      addHistory(last);
+      Swal.fire({
+        icon: 'success',
+        title: '추첨 완료!',
+        text: `이번 당번: ${last.join(', ')}`,
+        confirmButtonColor: '#3b82f6'
+      });
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      if(!last.length){
+        Swal.fire({icon: 'warning', title: '먼저 추첨을 실행하세요.'});
+        return;
+      }
+      navigator.clipboard.writeText(last.join(', '));
+      Swal.fire({icon: 'info', title: '복사 완료', text: last.join(', ')});
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      last = [];
+      RESULT.innerHTML = '';
+      HISTORY.innerHTML = '';
+      Swal.fire({icon: 'success', title: '초기화 완료'});
+    });
+  </script>
+</body>
+</html>
